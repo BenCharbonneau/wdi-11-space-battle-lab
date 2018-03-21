@@ -11,20 +11,13 @@ class Ship {
 	}
 	attack(target) {
 		let firepower = this.firepower;
-		let minAccToHit = Math.random()
-		let useMissle = false;
+		let minAccToHit = Math.random();
 
 		if (minAccToHit < this.accuracy) {
 			if (target.equipment && target.equipment.includes("shields")) {
 				firepower = firepower - genRandomNumInRange(4,0);
 			}
-			if (this.missles) {
-				useMissle = yesNoPrompt("Use a missle?");
-				if (useMissle) {
-					firepower = 10;
-					this.missles--;
-				}
-			}
+			
 			if (firepower < 0) firepower = 0;
 
 			console.log(this.name + ' hit successfully!');
@@ -37,13 +30,50 @@ class Ship {
 		if (target.hull <= 0) {
 			return true;
 		}
-		else {
-			return target.attack(this);
-		}
 	}
 }
 
-const USS_Assembly = new Ship(20,5,0.7,"USS_Assembly",["super laser","shields","missles"]);
+class PlayerShip extends Ship {
+	constructor(hull,firepower,accuracy,name,equipment) {
+		super(hull,firepower,accuracy,name);
+		this.equipment = equipment;
+		if (this.equipment && this.equipment.includes("missles")) {
+			this.missles = genRandomNumInRange(3,1);
+		}
+	}
+	attack(target) {
+		let firepower = this.firepower;
+		let minAccToHit = Math.random()
+		let useMissle = false;
+
+		if (this.missles) {
+			useMissle = yesNoPrompt("Use a missle?");
+			if (useMissle) {
+				firepower = 10;
+				this.missles--;
+			}
+		}
+
+		if (minAccToHit < this.accuracy) {
+			if (target.equipment && target.equipment.includes("shields") && !useMissle) {
+				firepower = firepower - genRandomNumInRange(4,0);
+			}
+			
+			if (firepower < 0) firepower = 0;
+
+			console.log(this.name + ' hit successfully!');
+			target.hull -= firepower;
+		}
+		else {
+		 	console.log(this.name + ' missed!');
+		}
+
+		return alienFactory.attack(target);
+	}
+
+}
+
+const USS_Assembly = new PlayerShip(20,5,0.7,"USS_Assembly",["super laser","shields","missles"]);
 
 const alienFactory = {
 	aliens: [],
@@ -57,6 +87,7 @@ const alienFactory = {
 			hull = genRandomNumInRange(6,3);
 			firepower = genRandomNumInRange(4,2);
 			accuracy = genRandomNumInRange(0.8,0.6,1);
+
 			this.aliens[this.aliens.length] = new Ship(hull,firepower,accuracy,"Alien");
 		}
 		this.totalAliens = this.aliens.length;
@@ -67,6 +98,22 @@ const alienFactory = {
 		for (let i in this.aliens) {
 			alien = this.aliens[i];
 			console.log(i+": hull("+alien.hull+") firepower("+alien.firepower+")");
+		}
+	},
+	attack(origAlien) {
+		let alien = {};
+		for (let i in this.aliens) {
+			alien = this.aliens[i];
+			alien.attack(USS_Assembly);
+			if (USS_Assembly.hull <= 0) {
+				return true;
+			}
+		}
+		if (origAlien.hull > 0) {
+			return USS_Assembly.attack(origAlien);
+		}
+		else{
+			return true;
 		}
 	}
 }
