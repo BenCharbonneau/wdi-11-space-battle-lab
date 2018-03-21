@@ -5,26 +5,34 @@ class Ship {
 		this.accuracy = accuracy;
 		this.name = name;
 		this.equipment = equipment;
+		if (this.equipment && this.equipment.includes("missles")) {
+			this.missles = genRandomNumInRange(3,1);
+		}
 	}
 	attack(target) {
 		let firepower = this.firepower;
 		let minAccToHit = Math.random()
+		let useMissle = false;
 
 		if (minAccToHit < this.accuracy) {
 			if (target.equipment && target.equipment.includes("shields")) {
 				firepower = firepower - genRandomNumInRange(4,0);
 			}
+			if (this.missles) {
+				useMissle = yesNoPrompt("Use a missle?");
+				if (useMissle) {
+					firepower = 10;
+					this.missles--;
+				}
+			}
 			if (firepower < 0) firepower = 0;
-			
+
 			console.log(this.name + ' hit successfully!');
 			target.hull -= firepower;
 		}
 		else {
 		 	console.log(this.name + ' missed!');
 		}
-		// if (minAccToHit >= this.accuracy) {
-		// 	console.log(this.name + ' missed!');
-		// }
 
 		if (target.hull <= 0) {
 			return true;
@@ -35,7 +43,7 @@ class Ship {
 	}
 }
 
-const USS_Assembly = new Ship(20,5,0.7,"USS_Assembly",["super laser","shields"]);
+const USS_Assembly = new Ship(20,5,0.7,"USS_Assembly",["super laser","shields","missles"]);
 
 const alienFactory = {
 	aliens: [],
@@ -70,13 +78,20 @@ function playGame() {
 
 	console.log("The battle has started...");
 
+	if (USS_Assembly.missles) {
+		console.log("You have "+USS_Assembly.missles+" missles.");
+	}
+
 	for (let i = 0; i < alienFactory.totalAliens; i++) {
 		
 		console.log(" ");
 
-		if (USS_Assembly.equipment.includes("super laser")) {
+		if (USS_Assembly.equipment && USS_Assembly.equipment.includes("super laser")) {
 			alienFactory.displayAliens();
 			index = prompt("Pick an alien to attack.");
+			if (!parseInt(index) || index <= 0) {
+				index = 0;
+			}
 		}
 		else {
 			index = i;
@@ -98,8 +113,8 @@ function playGame() {
 				}
 				else {
 					console.log("The alien was destroyed. "+(alienFactory.totalAliens - totAliensDestroy)+" left!");
-					retreat = prompt("You have "+USS_Assembly.hull+" hull left. Do you want to retreat? (Y/N)");
-					if (retreat !== null && (retreat.toUpperCase() === "Y" || retreat.toUpperCase() === "YES")) {
+					retreat = yesNoPrompt("You have "+USS_Assembly.hull+" hull left. Do you want to retreat? (Y/N)");
+					if (retreat) {
 						endGameText("You retreated.",totAliensDestroy);
 						return;
 					}
@@ -156,3 +171,9 @@ function genRandomNumInRange(top,bot,decPlaces) {
 	return Math.round(((Math.random()*(top-bot))+bot)*mult)/mult;
 }
 
+function yesNoPrompt(text) {
+	yesNo = prompt(text);
+	if (yesNo && (yesNo.toUpperCase() === "Y" || yesNo.toUpperCase() === "YES")) {
+		return true;
+	}
+}
