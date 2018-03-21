@@ -7,13 +7,24 @@ class Ship {
 		this.equipment = equipment;
 	}
 	attack(target) {
-		if (Math.random() < this.accuracy) {
+		let firepower = this.firepower;
+		let minAccToHit = Math.random()
+
+		if (minAccToHit < this.accuracy) {
+			if (target.equipment && target.equipment.includes("shields")) {
+				firepower = firepower - genRandomNumInRange(4,0);
+			}
+			if (firepower < 0) firepower = 0;
+			
 			console.log(this.name + ' hit successfully!');
-			target.hull -= this.firepower;
+			target.hull -= firepower;
 		}
 		else {
-			console.log(this.name + ' missed!');
+		 	console.log(this.name + ' missed!');
 		}
+		// if (minAccToHit >= this.accuracy) {
+		// 	console.log(this.name + ' missed!');
+		// }
 
 		if (target.hull <= 0) {
 			return true;
@@ -24,7 +35,7 @@ class Ship {
 	}
 }
 
-const USS_Assembly = new Ship(20,5,0.7,"USS_Assembly",["super laser"]);
+const USS_Assembly = new Ship(20,5,0.7,"USS_Assembly",["super laser","shields"]);
 
 const alienFactory = {
 	aliens: [],
